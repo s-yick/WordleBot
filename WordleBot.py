@@ -6,7 +6,7 @@ import os.path
 from table2ascii import table2ascii as t2a, PresetStyle
 import sys
 
-TOKEN = ""
+TOKEN = "OTQ1MjA3MjM1MDQxMTgxNzI3.G63d4M.31SkZT0K9Ui-WnrHtdGtu6YHDTTNS9ZhQIy4Lk"
 
 intents = discord.Intents().all()
 client = discord.Client(intents=intents)
@@ -16,15 +16,16 @@ client = discord.Client(intents=intents)
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
 
-    wordleMessage.start()
+    await wordleMessage()
 
 
 
 
-@tasks.loop(seconds=10)
 async def wordleMessage():
 
+
     channel = await client.fetch_channel(944480120041771049)
+
 
     await updateScores()
 
@@ -39,16 +40,18 @@ async def wordleMessage():
     )
 
     await channel.send(
-        "------------------------\nThere's a new wordle!\n "
-
-        "\n------------------------\n"+
-
+        "------------------------\nThere's a new wordle!\n"
+    
+        "------------------------"+
+    
         f"\n**Leaderboard**```\n{output}\n```"
-
+    
                         )
 
 
     sys.exit("Complete")
+
+
 
 def formatOutput():
 
@@ -64,41 +67,50 @@ def formatOutput():
 
     f.close()
 
-    print(listofScores)
 
     listofScores.sort(key=lambda x: x[1], reverse=True)
 
 
 
-    print(listofScores)
-
     return listofScores
 
 
 
-async def loopDays():
 
+async def getMessages():
     """
     Gets all wordle score messages from past day
     :return: A list of all messages following format of Wordle Score
     """
 
     # Get yesterdays date.
-    yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+    yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
+
+    yesterdayZero = datetime.datetime.combine(yesterday, datetime.datetime.min.time())
+
+    today = datetime.datetime.combine(datetime.datetime.today(), datetime.datetime.min.time())
+
+    today = today.replace(hour=6)
+
+    yesterdayZero = yesterdayZero.replace(hour=6)
+
 
     # Set Channel
     channel = client.get_channel(944480120041771049)
 
     messageList = []
 
-    todaysMessages = await channel.history(limit=None, after=yesterday).flatten()
+    todaysMessages = await channel.history(limit=None, after=yesterdayZero, before=today).flatten()
 
 
     for i in todaysMessages:
         #if the message content follows regex pattern:
-        if re.match("^Wordle\s[0-9]+\s[0-9]/[0-9]*", i.content):
+        if re.match("^Wordle\s[0-9]+\s./[0-9]*", i.content):
             #append message object to list
             messageList.append(i)
+
+
+
 
     return messageList
 
@@ -119,7 +131,9 @@ async def buildBoard():
 
 
     #list of all messages which are wordle scores from past day
-    messageList = await loopDays()
+    messageList = await getMessages()
+
+
 
     #list of players and their score
     formatData = []
@@ -144,11 +158,11 @@ async def buildBoard():
 
 
 
-    flag = False
     tempArr = []
 
     #now check for new players who participated in past day
     for message in messageList:
+        flag = False
         for currentPlayers in formatData:
 
             #if the player already exists in the list, set flag to true
@@ -164,6 +178,8 @@ async def buildBoard():
         formatData.append(i)
 
     f.close()
+
+
 
     return formatData
 
@@ -223,7 +239,7 @@ async def getNewScores(messageList):
             todaysScore.append([i.author.name, 1])
 
         elif score == "X":
-            todaysScore.append([i.author.name, -5])
+            todaysScore.append([i.author.name, -6])
 
     return todaysScore
 
@@ -238,24 +254,35 @@ async def updateScores():
     """
 
 
-    messageList = await loopDays()
+    messageList = await getMessages()
+    #Array of all Wordle messages from past 24 hours
 
     #Go through content for each person and extract their new score
 
     newScores = await getNewScores(messageList)
+    #array of users and their scores from the past day
 
     oldScores = await buildBoard()
+    #array of users and their existing scores from the saved leaderboard
 
+
+    
 
     playerScore = []
 
-    for i in newScores:
-        for j in oldScores:
 
-            if j[0] == i[0]:
+    for i in oldScores:
+
+        #Flag - True if there is an updated score, false otherwise
+        flag = False
+
+        for j in newScores:
+            if i[0] == j[0]:
+                flag = True
                 playerScore.append([i[0], i[1]+int(j[1])]) #Why isnt this an int already lmao
 
-
+        if flag == False:
+            playerScore.append(i)
 
 
     updateFile(playerScore)
