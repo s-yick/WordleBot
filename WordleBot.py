@@ -49,6 +49,8 @@ async def wordleMessage():
                         )
 
 
+    resetBoard()
+
     sys.exit("Complete")
 
 
@@ -321,6 +323,13 @@ def updateFile(updatedArray):
 
 #sort the scores
 
+def resetBoard():
+
+    d = datetime.datetime.now()
+    day = d.strftime("%d")
+
+    if (day == '01'):
+        open("leaderboard.txt", "w").close()
 
 
 
