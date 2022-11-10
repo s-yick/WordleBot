@@ -6,7 +6,7 @@ import os.path
 from table2ascii import table2ascii as t2a, PresetStyle
 import sys
 
-TOKEN = "OTQ1MjA3MjM1MDQxMTgxNzI3.G63d4M.31SkZT0K9Ui-WnrHtdGtu6YHDTTNS9ZhQIy4Lk"
+TOKEN = ""
 
 intents = discord.Intents().all()
 client = discord.Client(intents=intents)
